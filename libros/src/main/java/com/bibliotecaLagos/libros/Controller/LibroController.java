@@ -22,7 +22,6 @@ public class LibroController {
     @Autowired
     private LibroService libroService;
 
-    // LISTAR TODOS
     @GetMapping
     public ResponseEntity<List<Libro>> obtenerLibros() {
 
@@ -36,41 +35,36 @@ public class LibroController {
         return ResponseEntity.ok(listaLibros);
     }
 
-    // BUSCAR POR ID
+    
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarPorId(
-            @PathVariable Integer id) {
-
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         Libro libro = libroService.buscarPorId(id);
 
         if(libro == null) {
 
             return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Libro no encontrado");
+            .status(HttpStatus.NOT_FOUND)
+            .body("Libro no encontrado");
         }
 
         return ResponseEntity.ok(libro);
     }
 
-    // BUSCAR POR ISBN
     @GetMapping("/isbn/{isbn}")
-    public ResponseEntity<?> buscarPorIsbn(
-            @PathVariable String isbn) {
+    public ResponseEntity<?> buscarPorIsbn(@PathVariable String isbn) {
 
         Libro libro = libroService.buscarPorIsbn(isbn);
 
         if(libro == null) {
 
             return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Libro no encontrado");
+            .status(HttpStatus.NOT_FOUND)
+            .body("Libro no encontrado");
         }
 
         return ResponseEntity.ok(libro);
     }
 
-    // CREAR
     @PostMapping
     public ResponseEntity<?> crearLibro(
             @Valid @RequestBody LibroDTO dto) {
@@ -80,48 +74,42 @@ public class LibroController {
             Libro libroNuevo = libroService.crearLibro(dto);
 
             return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(libroNuevo);
+            .status(HttpStatus.CREATED)
+            .body(libroNuevo);
 
         } catch (Exception e) {
 
             return ResponseEntity
-                    .badRequest()
-                    .body(e.getMessage());
+            .badRequest()
+            .body(e.getMessage());
         }
     }
 
-    // ACTUALIZAR
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarLibro(
-            @PathVariable Integer id,
-            @Valid @RequestBody LibroDTO dto) {
+    public ResponseEntity<?> actualizarLibro( @PathVariable Integer id, @Valid @RequestBody LibroDTO dto) {
 
-        Libro libroActualizado =
-                libroService.actualizarLibro(id, dto);
+        Libro libroActualizado = libroService.actualizarLibro(id, dto);
 
         if(libroActualizado == null) {
 
             return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Libro no encontrado");
+            .status(HttpStatus.NOT_FOUND)
+            .body("Libro no encontrado");
         }
 
         return ResponseEntity.ok(libroActualizado);
     }
 
-    // ELIMINAR
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminarLibro(
-            @PathVariable Integer id) {
+    public ResponseEntity<?> eliminarLibro(@PathVariable Integer id) {
 
         Libro libro = libroService.buscarPorId(id);
 
         if(libro == null) {
 
             return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Libro no encontrado");
+            .status(HttpStatus.NOT_FOUND)
+            .body("Libro no encontrado");
         }
 
         libroService.eliminarLibro(id);
