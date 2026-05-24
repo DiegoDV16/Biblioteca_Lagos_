@@ -1,17 +1,18 @@
 package com.bibliotecaLagos.Multas.Client;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
-
 @Component
+@RequiredArgsConstructor
 public class PrestamoClient {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
-    private final String PRESTAMO_URL = "http://localhost:8083/api/prestamos/";
+    private final String URL = "http://localhost:8083/api/prestamos/";
 
-    public Map<String, Object> obtenerPrestamo(Integer prestamoId) {
-        return restTemplate.getForObject(PRESTAMO_URL + prestamoId, Map.class);
+    public Object obtenerPrestamo(Integer id) {
+        return restTemplate.getForObject(URL + id, Object.class);
     }
 }
