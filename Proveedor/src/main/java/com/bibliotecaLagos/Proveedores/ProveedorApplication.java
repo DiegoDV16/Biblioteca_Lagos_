@@ -1,4 +1,4 @@
-package com.bibliotecaLagos.Proveedor;
+package com.bibliotecaLagos.Proveedores;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
