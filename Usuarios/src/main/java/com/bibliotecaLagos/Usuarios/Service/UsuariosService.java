@@ -3,7 +3,6 @@ package com.bibliotecaLagos.Usuarios.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.bibliotecaLagos.Usuarios.Client.RolClient;
 import com.bibliotecaLagos.Usuarios.Client.RolesResponseDTO;
 import com.bibliotecaLagos.Usuarios.DTO.UsuariosDTO;
 import com.bibliotecaLagos.Usuarios.DTO.UsuariosResponseDTO;
@@ -17,12 +16,12 @@ public class UsuariosService {
     private UsuariosRepository usuarioRepository;
 
     @Autowired
-    private RolClient rolClient;
+    private RolesClient rolesClient;
 
     public UsuariosResponseDTO crearUsuario(UsuariosDTO dto) {
 
         // validar rol en microservicio roles
-        RolesResponseDTO rol = rolClient.obtenerRol(dto.getRolId());
+        RolesResponseDTO rol = rolesClient.obtenerRol(dto.getRolId());
 
         if (rol == null) {
             throw new RuntimeException("Rol no existe");
