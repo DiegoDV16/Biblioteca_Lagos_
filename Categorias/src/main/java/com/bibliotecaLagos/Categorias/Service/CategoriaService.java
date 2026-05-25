@@ -1,15 +1,22 @@
 package com.bibliotecaLagos.Categorias.Service;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Service;
+
 import com.bibliotecaLagos.Categorias.DTO.CategoriaDTO;
+import com.bibliotecaLagos.Categorias.Exception.DuplicateResourceException;
+import com.bibliotecaLagos.Categorias.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Categorias.Model.Categoria;
 import com.bibliotecaLagos.Categorias.Repository.CategoriaRepository;
+
 import jakarta.transaction.Transactional;
 
 @Service
 @Transactional
+
 public class CategoriaService {
 
     @Autowired
@@ -20,10 +27,24 @@ public class CategoriaService {
     }
 
     public Categoria buscarPorId(Integer id) {
-        return categoriaRepository.findById(id).orElse(null);
+
+        return categoriaRepository.findById(id)
+        .orElseThrow(() ->
+        new ResourceNotFoundException(
+                "Categoria no encontrada"
+        ));
     }
 
     public Categoria crearCategoria(CategoriaDTO dto) {
+
+        if(categoriaRepository
+            .findByNombre(dto.getNombre())
+            .isPresent()) {
+
+            throw new DuplicateResourceException(
+            "La categoria ya existe"
+            );
+        }
 
         Categoria categoria = new Categoria();
         categoria.setNombre(dto.getNombre());
@@ -34,17 +55,14 @@ public class CategoriaService {
     public Categoria actualizarCategoria(Integer id, CategoriaDTO dto) {
 
         Categoria categoria = buscarPorId(id);
-
-        if(categoria == null) {
-            return null;
-        }
-
         categoria.setNombre(dto.getNombre());
         categoria.setDescripcion(dto.getDescripcion());
         return categoriaRepository.save(categoria);
     }
 
     public void eliminarCategoria(Integer id) {
-        categoriaRepository.deleteById(id);
+
+        Categoria categoria = buscarPorId(id);
+        categoriaRepository.delete(categoria);
     }
 }
