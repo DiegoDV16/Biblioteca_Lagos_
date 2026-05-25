@@ -1,4 +1,5 @@
 CREATE TABLE roles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL UNIQUE
+    id integer not null auto_increment,
+    nombre VARCHAR(50) not null,
+    primary key (id)
 );
