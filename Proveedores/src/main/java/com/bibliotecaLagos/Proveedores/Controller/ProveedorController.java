@@ -3,10 +3,10 @@ package com.bibliotecaLagos.Proveedores.Controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import com.bibliotecaLagos.Proveedores.DTO.ProveedorDTO;
@@ -24,86 +24,65 @@ public class ProveedorController {
     private ProveedorService proveedorService;
 
     @GetMapping
-    public ResponseEntity<List<Proveedor>> listar() {
+    public ResponseEntity<List<Proveedor>> obtenerProveedores() {
 
-        List<Proveedor> proveedores = proveedorService.obtenerProveedores();
+        List<Proveedor> lista = proveedorService.obtenerProveedores();
 
-        if(proveedores.isEmpty()) {
-            return ResponseEntity.noContent().build();
+        if(lista.isEmpty()) {
+
+            return ResponseEntity
+            .noContent()
+            .build();
         }
 
-        return ResponseEntity.ok(proveedores);
+        return ResponseEntity.ok(lista);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<Proveedor> buscarPorId(@PathVariable Integer id) {
 
-        Proveedor proveedor = proveedorService.obtenerProveedorPorId(id);
-
-        if(proveedor == null) {
-
-            return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body("Proveedor no encontrado");
-        }
+        Proveedor proveedor = proveedorService.buscarPorId(id);
 
         return ResponseEntity.ok(proveedor);
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@Valid @RequestBody ProveedorDTO dto, BindingResult result) {
+    public ResponseEntity<Proveedor>
+            crearProveedor(
+                    @Valid
+                    @RequestBody
+                    ProveedorDTO dto
+            ) {
 
-        if(result.hasErrors()) {
-
-            return ResponseEntity
-            .badRequest()
-            .body(result.getAllErrors());
-        }
-
-        Proveedor proveedor = proveedorService.crearProveedor(dto);
+        Proveedor proveedorNuevo = proveedorService.crearProveedor(dto);
 
         return ResponseEntity
         .status(HttpStatus.CREATED)
-        .body(proveedor);
+        .body(proveedorNuevo);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> actualizar(@PathVariable Integer id, @Valid @RequestBody ProveedorDTO dto,
-        BindingResult result) {
+    public ResponseEntity<Proveedor>
+            actualizarProveedor(
+                    @PathVariable Integer id,
 
-        if(result.hasErrors()) {
+                    @Valid
+                    @RequestBody
+                    ProveedorDTO dto
+            ) {
 
-            return ResponseEntity
-            .badRequest()
-            .body(result.getAllErrors());
-        }
+        Proveedor proveedorActualizado = proveedorService.actualizarProveedor(id, dto);
 
-        Proveedor proveedor = proveedorService.actualizarProveedor(id, dto);
-
-        if(proveedor == null) {
-
-            return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body("Proveedor no encontrado");
-        }
-
-        return ResponseEntity.ok(proveedor);
+        return ResponseEntity.ok(proveedorActualizado);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
-
-        Proveedor proveedor = proveedorService.obtenerProveedorPorId(id);
-
-        if(proveedor == null) {
-
-            return ResponseEntity
-            .status(HttpStatus.NOT_FOUND)
-            .body("Proveedor no encontrado");
-        }
+    public ResponseEntity<String> eliminarProveedor(@PathVariable Integer id) {
 
         proveedorService.eliminarProveedor(id);
 
-        return ResponseEntity.ok("Proveedor eliminado correctamente");
+        return ResponseEntity.ok(
+                "Proveedor eliminado correctamente"
+        );
     }
 }
