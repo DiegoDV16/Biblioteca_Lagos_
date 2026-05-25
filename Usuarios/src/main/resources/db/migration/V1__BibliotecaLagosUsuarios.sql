@@ -1,0 +1,7 @@
+CREATE TABLE usuarios (
+    id INTEGER AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(100) NOT NULL UNIQUE,
+    contrasena VARCHAR(255) NOT NULL,
+    rol_id INTEGER NOT NULL,
+    activo BOOLEAN DEFAULT TRUE
+);
