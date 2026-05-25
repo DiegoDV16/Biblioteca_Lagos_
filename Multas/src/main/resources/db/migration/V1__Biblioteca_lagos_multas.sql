@@ -1,7 +1,8 @@
-CREATE TABLE multas (
-    id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
-    prestamo_id INT NOT NULL,
-    monto DECIMAL(10,2) NOT NULL,
-    dias_retraso INT NOT NULL,
-    pagada BIT DEFAULT 0
+create table multas(
+    id integer not null auto_increment,
+    prestamo_id integer not null unique,
+    monto decimal(10,2) not null,
+    dias_retraso integer not null,
+    pagada boolean default false,
+    primary key (id)
 );

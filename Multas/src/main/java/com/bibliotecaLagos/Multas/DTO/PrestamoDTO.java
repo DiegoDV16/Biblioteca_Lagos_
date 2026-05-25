@@ -1,13 +1,21 @@
 package com.bibliotecaLagos.Multas.DTO;
 
-import lombok.*;
+import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+
 public class PrestamoDTO {
 
     private Integer id;
-    private String fechaDevolucion;
-    private String fechaEntrega;
+    private Integer socioId;
+    private Integer libroId;
+    private LocalDate fechaPrestamo;
+    private LocalDate fechaDevolucion;
+    private LocalDate fechaEntrega;
+    private String estado;
 }

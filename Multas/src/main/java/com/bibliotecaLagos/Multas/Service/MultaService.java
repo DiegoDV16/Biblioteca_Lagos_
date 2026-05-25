@@ -1,74 +1,92 @@
 package com.bibliotecaLagos.Multas.Service;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import com.bibliotecaLagos.Multas.Client.PrestamoClient;
-import com.bibliotecaLagos.Multas.DTO.PrestamoDTO;
-import com.bibliotecaLagos.Multas.Model.Multas;
-import com.bibliotecaLagos.Multas.Repository.MultasRepository;
-
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import com.bibliotecaLagos.Multas.DTO.MultaDTO;
+import com.bibliotecaLagos.Multas.DTO.PrestamoDTO;
+import com.bibliotecaLagos.Multas.Exception.DuplicateResourceException;
+import com.bibliotecaLagos.Multas.Exception.ResourceNotFoundException;
+import com.bibliotecaLagos.Multas.Model.Multa;
+import com.bibliotecaLagos.Multas.Repository.MultaRepository;
+import jakarta.transaction.Transactional;
+import reactor.core.publisher.Mono;
 
 @Service
-@RequiredArgsConstructor
+@Transactional
+
 public class MultaService {
 
-    private final MultasRepository multasRepository;
-    private final PrestamoClient prestamoClient;
+    @Autowired
+    private MultaRepository multaRepository;
 
-    private static final double MULTA_POR_DIA = 1000;
-    
-    public Multas generarMulta(Integer prestamoId) {
+    @Autowired
+    @Qualifier("webClientPrestamos")
+    private WebClient webClientPrestamos;
 
-        PrestamoDTO prestamo = (PrestamoDTO) prestamoClient.obtenerPrestamo(prestamoId);
+    public List<Multa> obtenerMultas() {
 
-        if (prestamo == null) {
-            throw new RuntimeException("El préstamo no existe");
-        }
-    
-        if (prestamo.getFechaEntrega() == null) {
-            throw new RuntimeException("El libro aún no ha sido entregado");
-        }
-
-        LocalDate fechaDevolucion = LocalDate.parse(prestamo.getFechaDevolucion());
-        LocalDate fechaEntrega = LocalDate.parse(prestamo.getFechaEntrega());
-
-        if (!fechaEntrega.isAfter(fechaDevolucion)) {
-            throw new RuntimeException("No hay retraso, no se genera multa");
-        }
-
-        long diasRetraso = ChronoUnit.DAYS.between(fechaDevolucion, fechaEntrega);
-
-        double monto = diasRetraso * MULTA_POR_DIA;
-
-        if (multasRepository.findByPrestamoId(prestamoId).isPresent()) {
-            throw new RuntimeException("Ya existe una multa para este préstamo");
-        }
-
-        Multas multas = Multas.builder()
-                .prestamoId(prestamoId)
-                .diasRetraso((int) diasRetraso)
-                .monto(monto)
-                .pagada(false)
-                .build();
-
-        return multasRepository.save(multas);
+        return multaRepository.findAll();
     }
 
-    public List<Multas> listar() {
-        return multasRepository.findAll();
+    public Multa buscarPorId(Integer id) {
+
+        return multaRepository.findById(id)
+        .orElseThrow(() ->
+        new ResourceNotFoundException(
+                "Multa no encontrada"
+        ));
     }
 
-    public Multas pagar(Integer id) {
+    public Multa crearMulta(MultaDTO dto) {
 
-        Multas multas = multasRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Multa no encontrada"));
+        if(multaRepository.findByPrestamoId(dto.getPrestamoId()).isPresent()) {
 
-        multas.setPagada(true);
+            throw new DuplicateResourceException(
+             "Ya existe una multa para este prestamo"
+            );
+        }
 
-        return multasRepository.save(multas);
+        PrestamoDTO prestamo = webClientPrestamos.get()
+        .uri("/{id}", dto.getPrestamoId())
+        .retrieve()
+        .onStatus(
+        HttpStatusCode::is4xxClientError,
+        response -> Mono.error(
+        new ResourceNotFoundException(
+                "Prestamo no encontrado"
+        )))
+        .bodyToMono(PrestamoDTO.class)
+        .block();
+
+        Multa multa = new Multa();
+
+        multa.setPrestamoId(prestamo.getId());
+        multa.setMonto(dto.getMonto());
+        multa.setDiasRetraso(dto.getDiasRetraso());
+        multa.setPagada(dto.getPagada() != null
+        ? dto.getPagada()
+        : false);
+
+        return multaRepository.save(multa);
+    }
+
+    public Multa actualizarMulta(Integer id, MultaDTO dto) {
+
+        Multa multa = buscarPorId(id);
+        multa.setMonto(dto.getMonto());
+        multa.setDiasRetraso(dto.getDiasRetraso());
+        multa.setPagada(dto.getPagada());
+
+        return multaRepository.save(multa);
+    }
+
+    public void eliminarMulta(Integer id) {
+
+        Multa multa = buscarPorId(id);
+        multaRepository.delete(multa);
     }
 }
