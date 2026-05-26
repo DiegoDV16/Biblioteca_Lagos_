@@ -60,4 +60,18 @@ public class TipoSocioController {
 
         return ResponseEntity.ok("Tipo de socio eliminado correctamente");
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<?> actualizar(@PathVariable Integer id,
+            @Valid @RequestBody TipoSocioDTO dto,
+            BindingResult result) {
+
+        if(result.hasErrors()) {
+            return ResponseEntity
+            .badRequest()
+            .body(result.getAllErrors());
+        }
+        TipoSocio tipo = tipoSocioService.actualizarTipoSocio(id, dto);
+
+        return ResponseEntity.ok(tipo);
+    }
 }

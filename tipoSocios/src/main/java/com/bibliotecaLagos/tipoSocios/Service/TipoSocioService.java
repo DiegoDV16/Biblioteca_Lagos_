@@ -15,6 +15,8 @@ import com.bibliotecaLagos.tipoSocios.Model.TipoSocio;
 
 import com.bibliotecaLagos.tipoSocios.Repository.TipoSocioRepository;
 
+import jakarta.validation.Valid;
+
 @Service
 public class TipoSocioService {
 
@@ -52,5 +54,10 @@ public class TipoSocioService {
 
         TipoSocio tipoSocio = obtenerTipoSocioPorId(id);
         tipoSocioRepository.delete(tipoSocio);
+    }
+
+    public TipoSocio actualizarTipoSocio(Integer id, TipoSocioDTO dto) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'actualizarTipoSocio'");
     }
 }
