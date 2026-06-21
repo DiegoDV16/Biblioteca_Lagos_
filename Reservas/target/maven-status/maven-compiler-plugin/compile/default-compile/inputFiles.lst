@@ -1,0 +1,12 @@
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Config\WebClientConfig.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Controller\ReservaController.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\DTO\LibroDTO.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\DTO\ReservaDTO.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\DTO\SocioDTO.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Exception\DuplicateResourceException.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Exception\GlobalExceptionHandler.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Exception\ResourceNotFoundException.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Model\Reserva.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Repository\ReservaRepository.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\ReservaApplication.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Service\ReservaService.java

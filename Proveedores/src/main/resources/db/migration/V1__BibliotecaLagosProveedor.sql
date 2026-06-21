@@ -4,5 +4,6 @@ create table proveedores(
     telefono varchar(20) not null,
     correo varchar(100) not null,
     direccion varchar(255) not null,
+    estado varchar(20) not null,
     primary key (id)
 );
