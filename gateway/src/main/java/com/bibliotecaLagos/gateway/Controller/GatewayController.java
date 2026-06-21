@@ -63,6 +63,10 @@ public class GatewayController {
             return "http://localhost:8085" + path;
         }
 
+        if (path.startsWith("/api/v1/usuarios")) {
+            return "http://localhost:8089" + path;
+        }
+
         return null;
     }
 }
