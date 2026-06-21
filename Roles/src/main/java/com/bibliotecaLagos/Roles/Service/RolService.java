@@ -1,59 +1,80 @@
 package com.bibliotecaLagos.Roles.Service;
 
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import com.bibliotecaLagos.Roles.DTO.RolDTO;
 import com.bibliotecaLagos.Roles.Exception.DuplicateResourceException;
 import com.bibliotecaLagos.Roles.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Roles.Model.Rol;
 import com.bibliotecaLagos.Roles.Repository.RolRepository;
+
 import jakarta.transaction.Transactional;
 
 @Service
 @Transactional
-
 public class RolService {
+
+    private static final Logger log = LoggerFactory.getLogger(RolService.class);
 
     @Autowired
     private RolRepository rolRepository;
 
     public List<Rol> obtenerRoles() {
-        return rolRepository.findAll();
+        log.info("Iniciando consulta de todos los roles");
+        List<Rol> roles = rolRepository.findAll();
+        log.info("Consulta completada: {} roles encontrados", roles.size());
+        return roles;
     }
 
     public Rol buscarPorId(Integer id) {
-
-        return rolRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                 "Rol no encontrado"));
+        log.info("Buscando rol por ID: {}", id);
+        Rol rol = rolRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Rol con ID {} no encontrado", id);
+                    return new ResourceNotFoundException("Rol no encontrado");
+                });
+        log.info("Rol encontrado: ID={}, nombre={}", rol.getId(), rol.getNombre());
+        return rol;
     }
 
     public Rol crearRol(RolDTO dto) {
+        log.info("Iniciando creacion de rol: nombre={}", dto.getNombre());
 
-        if(rolRepository
-            .findByNombre(dto.getNombre())
-            .isPresent()) {
-
-            throw new DuplicateResourceException( "El rol ya existe");
+        if (rolRepository.findByNombre(dto.getNombre()).isPresent()) {
+            log.warn("El rol '{}' ya existe", dto.getNombre());
+            throw new DuplicateResourceException("El rol ya existe");
         }
 
         Rol rol = new Rol();
-
         rol.setNombre(dto.getNombre());
-        return rolRepository.save(rol);
+
+        Rol guardado = rolRepository.save(rol);
+        log.info("Rol creado exitosamente: ID={}, nombre={}", guardado.getId(), guardado.getNombre());
+        return guardado;
     }
 
     public Rol actualizarRol(Integer id, RolDTO dto) {
+        log.info("Iniciando actualizacion de rol ID={}", id);
 
         Rol rol = buscarPorId(id);
         rol.setNombre(dto.getNombre());
-        return rolRepository.save(rol);
+
+        Rol actualizado = rolRepository.save(rol);
+        log.info("Rol ID={} actualizado a: nombre={}", id, actualizado.getNombre());
+        return actualizado;
     }
 
     public void eliminarRol(Integer id) {
+        log.info("Iniciando eliminacion de rol ID={}", id);
 
         Rol rol = buscarPorId(id);
         rolRepository.delete(rol);
+
+        log.info("Rol ID={} eliminado exitosamente", id);
     }
 }
