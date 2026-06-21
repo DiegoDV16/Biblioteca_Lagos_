@@ -1,0 +1,101 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "libros (8081)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/libros" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "categorias (8082)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/Categorias" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "proveedores (8083)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/Proveedores" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "prestamos (8084)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/Prestamos" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "socios (8085)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/Socios" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "tiposocio (8086)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/tipoSocios" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "multas (8087)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/Multas" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "roles (8088)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/Roles" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "reservas (8090)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/Reservas" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "usuarios (8095)",
+      "type": "shell",
+      "command": "$env:JAVA_HOME='C:\\Users\\vayal\\AppData\\Local\\jdks\\jdk-21.0.10'; .\\mvnw.cmd spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/Usuarios" },
+      "presentation": { "panel": "new", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Iniciar todos los microservicios",
+      "dependsOn": [
+        "libros (8081)",
+        "categorias (8082)",
+        "proveedores (8083)",
+        "prestamos (8084)",
+        "socios (8085)",
+        "tiposocio (8086)",
+        "multas (8087)",
+        "roles (8088)",
+        "reservas (8090)",
+        "usuarios (8095)"
+      ],
+      "dependsOrder": "parallel"
+    }
+  ]
+}

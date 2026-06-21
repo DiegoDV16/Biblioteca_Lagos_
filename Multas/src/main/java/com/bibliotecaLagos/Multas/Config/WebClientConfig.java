@@ -12,6 +12,6 @@ public class WebClientConfig {
 
         return WebClient.builder()
         .baseUrl("http://localhost:8086/api/v1/prestamos")
-        .build();
+
     }
 }
