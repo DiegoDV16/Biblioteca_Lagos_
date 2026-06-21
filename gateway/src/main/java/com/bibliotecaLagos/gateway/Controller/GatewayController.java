@@ -67,6 +67,10 @@ public class GatewayController {
             return "http://localhost:8089" + path;
         }
 
+        if (path.startsWith("/api/v1/prestamos")) {
+            return "http://localhost:8084" + path;
+        }
+
         return null;
     }
 }

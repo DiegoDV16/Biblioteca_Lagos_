@@ -1,77 +1,90 @@
 package com.bibliotecaLagos.Prestamos.Controller;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import org.springframework.validation.BindingResult;
-
-import org.springframework.web.bind.annotation.*;
-
+import com.bibliotecaLagos.Prestamos.Assemblers.PrestamoModelAssembler;
 import com.bibliotecaLagos.Prestamos.DTO.PrestamoDTO;
-
 import com.bibliotecaLagos.Prestamos.Model.Prestamo;
-
 import com.bibliotecaLagos.Prestamos.Service.PrestamoService;
 
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/prestamos")
-
 public class PrestamoController {
+
+    private static final Logger log = LoggerFactory.getLogger(PrestamoController.class);
 
     @Autowired
     private PrestamoService prestamoService;
+
+    @Autowired
+    private PrestamoModelAssembler prestamoModelAssembler;
+
     @GetMapping
-    public ResponseEntity<List<Prestamo>> listar() {
+    public ResponseEntity<CollectionModel<EntityModel<Prestamo>>> listar() {
+        log.info("GET /api/v1/prestamos - listar todos los prestamos");
+        List<Prestamo> prestamos = prestamoService.obtenerPrestamos();
 
-        List<Prestamo> prestamos =
-        prestamoService.obtenerPrestamos();
-
-        if(prestamos.isEmpty()) {
-
+        if (prestamos.isEmpty()) {
+            log.info("No se encontraron prestamos");
             return ResponseEntity.noContent().build();
         }
 
-        return ResponseEntity.ok(prestamos);
+        List<EntityModel<Prestamo>> prestamosModel = prestamos.stream()
+                .map(prestamoModelAssembler::toModel)
+                .collect(Collectors.toList());
+
+        CollectionModel<EntityModel<Prestamo>> collectionModel = CollectionModel.of(prestamosModel,
+                linkTo(methodOn(PrestamoController.class).listar()).withSelfRel());
+
+        log.info("Retornando {} prestamos", prestamos.size());
+        return ResponseEntity.ok(collectionModel);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
-
+    public ResponseEntity<EntityModel<Prestamo>> buscarPorId(@PathVariable Integer id) {
+        log.info("GET /api/v1/prestamos/{} - buscar prestamo por ID", id);
         Prestamo prestamo = prestamoService.obtenerPrestamoPorId(id);
-
-        return ResponseEntity.ok(prestamo);
+        log.info("Prestamo encontrado: ID={}", prestamo.getId());
+        return ResponseEntity.ok(prestamoModelAssembler.toModel(prestamo));
     }
 
     @PostMapping
-    public ResponseEntity<?> crear(@Valid @RequestBody PrestamoDTO dto, BindingResult result) {
-
-        if(result.hasErrors()) {
-
-            return ResponseEntity
-            .badRequest()
-            .body(result.getAllErrors());
-        }
-
+    public ResponseEntity<EntityModel<Prestamo>> crear(@Valid @RequestBody PrestamoDTO dto) {
+        log.info("POST /api/v1/prestamos - crear nuevo prestamo: libroId={}, socioId={}", dto.getLibroId(), dto.getSocioId());
         Prestamo prestamo = prestamoService.crearPrestamo(dto);
-
+        log.info("Prestamo creado exitosamente: ID={}", prestamo.getId());
         return ResponseEntity
-        .status(HttpStatus.CREATED)
-        .body(prestamo);
+                .status(HttpStatus.CREATED)
+                .body(prestamoModelAssembler.toModel(prestamo));
     }
-    
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
-
+    public ResponseEntity<String> eliminar(@PathVariable Integer id) {
+        log.info("DELETE /api/v1/prestamos/{} - eliminar prestamo", id);
         prestamoService.eliminarPrestamo(id);
-
-        return ResponseEntity.ok(
-                "Prestamo eliminado correctamente"
-        );
+        log.info("Prestamo ID={} eliminado exitosamente", id);
+        return ResponseEntity.ok("Prestamo eliminado correctamente");
     }
 }
+
