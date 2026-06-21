@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.libros.Model;
 
 import jakarta.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,24 +18,34 @@ public class Libro {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
     @Column(nullable = false)
     private String titulo;
+
     @Column(nullable = false)
     private String autor;
-    @Column(unique = true, nullable = false)
+
+    @Column(nullable = false, unique = true)
     private String isbn;
+
     @Column(nullable = false)
     private String editorial;
-    @Column(nullable = false)
+
+    @Column(name = "anio_publicacion", nullable = false)
     private Integer anioPublicacion;
-    @Column(nullable = false)
+
+    @Column(name = "cantidad_disponible", nullable = false)
     private Integer cantidadDisponible;
-    @Column(nullable = false)
+
+    @Column(name = "cantidad_total", nullable = false)
     private Integer cantidadTotal;
-    @Column(nullable = false)
+
+    @Column(name = "categoria_id", nullable = false)
     private Integer categoriaId;
-    @Column(nullable = false)
+
+    @Column(name = "proveedor_id", nullable = false)
     private Integer proveedorId;
+
     @Column(nullable = false)
     private String estado;
 }
