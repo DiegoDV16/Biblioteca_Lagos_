@@ -1,15 +1,10 @@
 package com.bibliotecaLagos.Categorias.Controller;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.springframework.http.HttpStatus;
-
-import org.springframework.http.ResponseEntity;
-
+import org.springframework.http.*;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import com.bibliotecaLagos.Categorias.DTO.CategoriaDTO;
 import com.bibliotecaLagos.Categorias.Model.Categoria;
 import com.bibliotecaLagos.Categorias.Service.CategoriaService;
@@ -27,62 +22,83 @@ public class CategoriaController {
     @GetMapping
     public ResponseEntity<List<Categoria>> obtenerCategorias() {
 
-        List<Categoria> lista = categoriaService.obtenerCategorias();
+        List<Categoria> categorias = categoriaService.obtenerCategorias();
 
-        if(lista.isEmpty()) {
-
-            return ResponseEntity
-            .noContent()
-            .build();
+        if(categorias.isEmpty()) {
+            return ResponseEntity.noContent().build();
         }
 
-        return ResponseEntity.ok(lista);
+        return ResponseEntity.ok(categorias);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Categoria>buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
 
         Categoria categoria = categoriaService.buscarPorId(id);
+
+        if(categoria == null) {
+
+            return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body("Categoría no encontrada");
+        }
+
         return ResponseEntity.ok(categoria);
     }
 
     @PostMapping
-    public ResponseEntity<Categoria> crearCategoria(
-                    @Valid
-                    @RequestBody
-                    CategoriaDTO dto
-            ) {
+    public ResponseEntity<?> crearCategoria(@Valid @RequestBody CategoriaDTO dto, BindingResult result) {
 
-        Categoria categoriaNueva = categoriaService.crearCategoria(dto);
+        if(result.hasErrors()) {
+
+            return ResponseEntity
+            .badRequest()
+            .body(result.getFieldError().getDefaultMessage());
+        }
+
+        Categoria categoria = categoriaService.crearCategoria(dto);
 
         return ResponseEntity
         .status(HttpStatus.CREATED)
-        .body(categoriaNueva);
+        .body(categoria);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Categoria>
-        actualizarCategoria(
-                @PathVariable Integer id,
+    public ResponseEntity<?> actualizarCategoria(@PathVariable Integer id, @Valid @RequestBody CategoriaDTO dto,
+            BindingResult result) {
 
-                @Valid
-                @RequestBody
-                CategoriaDTO dto
-        ) {
+        if(result.hasErrors()) {
 
-        Categoria categoriaActualizada = categoriaService.actualizarCategoria(id, dto);
+            return ResponseEntity
+            .badRequest()
+            .body(result.getFieldError().getDefaultMessage());
+        }
 
-        return ResponseEntity.ok(categoriaActualizada);
+        Categoria categoria = categoriaService.actualizarCategoria(id, dto);
+
+        if(categoria == null) {
+
+            return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body("Categoría no encontrada");
+        }
+
+        return ResponseEntity.ok(categoria);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String>
-        eliminarCategoria(@PathVariable Integer id) {
+    public ResponseEntity<?> eliminarCategoria(@PathVariable Integer id) {
+
+        Categoria categoria = categoriaService.buscarPorId(id);
+
+        if(categoria == null) {
+
+            return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body("Categoría no encontrada");
+        }
 
         categoriaService.eliminarCategoria(id);
-
-        return ResponseEntity.ok(
-            "Categoria eliminada correctamente"
-        );
+        return ResponseEntity.ok("Categoría eliminada");
     }
 }

@@ -53,8 +53,4 @@ public class ProveedorService {
     public void eliminarProveedor(Integer id) {
         proveedorRepository.deleteById(id);
     }
-
-    public Proveedor buscarPorId(Integer id) {
-        throw new UnsupportedOperationException("Unimplemented method 'buscarPorId'");
-    }
 }
