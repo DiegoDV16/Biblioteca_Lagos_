@@ -29,6 +29,10 @@ public class LibroDTO {
     @NotNull(message = "El año de publicacion es obligatorio")
     private Integer anioPublicacion;
 
+    @NotNull(message = "La cantidad disponible es obligatoria")
+    @Positive(message = "La cantidad disponible no puede ser negativa")
+    private Integer cantidadDisponible;
+
     @NotNull(message = "La cantidad total es obligatoria")
     @Positive(message = "La cantidad total debe ser mayor a 0")
     private Integer cantidadTotal;
@@ -38,4 +42,7 @@ public class LibroDTO {
 
     @NotNull(message = "El proveedor es obligatorio")
     private Integer proveedorId;
+
+    @NotBlank(message = "El estado es obligatorio")
+    private String estado;
 }
