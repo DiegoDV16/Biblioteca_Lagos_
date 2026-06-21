@@ -55,7 +55,6 @@ public class GatewayController {
         }
         if (path.startsWith("/api/v1/tipos-socio")) {
             return "http://localhost:8086" + path;
-        }
         if (path.startsWith("/api/v1/roles")) {
             return "http://localhost:8088" + path;
         }
