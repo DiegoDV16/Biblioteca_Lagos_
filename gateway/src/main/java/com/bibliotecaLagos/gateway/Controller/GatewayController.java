@@ -73,6 +73,9 @@ public class GatewayController {
         if (path.startsWith("/api/v1/multas")) {
             return "http://localhost:8087" + path;
         }
+        if (path.startsWith("/api/v1/reservas")) {
+            return "http://localhost:8090" + path;
+        }
 
         return null;
     }
