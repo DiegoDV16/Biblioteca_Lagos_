@@ -50,6 +50,12 @@ public class GatewayController {
         if (path.startsWith("/api/v1/libros")) {
             return "http://localhost:8081" + path;
         }
+        if (path.startsWith("/api/v1/proveedores")) {
+            return "http://localhost:8083" + path;
+        }
+        if (path.startsWith("/api/v1/tipos-socio")) {
+            return "http://localhost:8086" + path;
+        }
         return null;
     }
 }
