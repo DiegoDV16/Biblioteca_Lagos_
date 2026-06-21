@@ -62,6 +62,7 @@ public class GatewayController {
         if (path.startsWith("/api/v1/socios")) {
             return "http://localhost:8085" + path;
         }
+
         return null;
     }
 }
