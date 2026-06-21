@@ -87,3 +87,4 @@ public class PrestamoController {
         return ResponseEntity.ok("Prestamo eliminado correctamente");
     }
 }
+
