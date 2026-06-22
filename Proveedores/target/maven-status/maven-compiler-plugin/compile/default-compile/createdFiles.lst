@@ -1,9 +1,9 @@
 com\bibliotecaLagos\Proveedores\Exception\ResourceNotFoundException.class
-com\bibliotecaLagos\Proveedores\ProveedorApplication.class
-com\bibliotecaLagos\Proveedores\Exception\DuplicateResourceException.class
 com\bibliotecaLagos\Proveedores\Repository\ProveedorRepository.class
-com\bibliotecaLagos\Proveedores\Service\ProveedorService.class
 com\bibliotecaLagos\Proveedores\Exception\GlobalExceptionHandler.class
 com\bibliotecaLagos\Proveedores\Model\Proveedor.class
 com\bibliotecaLagos\Proveedores\Controller\ProveedorController.class
 com\bibliotecaLagos\Proveedores\DTO\ProveedorDTO.class
+com\bibliotecaLagos\Proveedores\ProveedorApplication.class
+com\bibliotecaLagos\Proveedores\Exception\DuplicateResourceException.class
+com\bibliotecaLagos\Proveedores\Service\ProveedorService.class
