@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.Roles.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +32,14 @@ public class RolService {
         return roles;
     }
 
-    public Rol buscarPorId(Integer id) {
+    public Optional<Rol> buscarPorId(Integer id) {
         log.info("Buscando rol por ID: {}", id);
-        Rol rol = rolRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Rol con ID {} no encontrado", id);
-                    return new ResourceNotFoundException("Rol no encontrado");
-                });
-        log.info("Rol encontrado: ID={}, nombre={}", rol.getId(), rol.getNombre());
+        Optional<Rol> rol = rolRepository.findById(id);
+        if (rol.isPresent()) {
+            log.info("Rol encontrado: ID={}, nombre={}", rol.get().getId(), rol.get().getNombre());
+        } else {
+            log.warn("Rol con ID {} no encontrado", id);
+        }
         return rol;
     }
 
@@ -61,7 +62,7 @@ public class RolService {
     public Rol actualizarRol(Integer id, RolDTO dto) {
         log.info("Iniciando actualizacion de rol ID={}", id);
 
-        Rol rol = buscarPorId(id);
+        Rol rol = buscarPorId(id).orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         rol.setNombre(dto.getNombre());
 
         Rol actualizado = rolRepository.save(rol);
@@ -72,7 +73,7 @@ public class RolService {
     public void eliminarRol(Integer id) {
         log.info("Iniciando eliminacion de rol ID={}", id);
 
-        Rol rol = buscarPorId(id);
+        Rol rol = buscarPorId(id).orElseThrow(() -> new ResourceNotFoundException("Rol no encontrado"));
         rolRepository.delete(rol);
 
         log.info("Rol ID={} eliminado exitosamente", id);

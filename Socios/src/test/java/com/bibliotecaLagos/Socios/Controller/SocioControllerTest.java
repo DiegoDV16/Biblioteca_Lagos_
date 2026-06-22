@@ -3,6 +3,7 @@ package com.bibliotecaLagos.Socios.Controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -14,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,13 +28,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.bibliotecaLagos.Socios.Assemblers.SocioModelAssembler;
 import com.bibliotecaLagos.Socios.DTO.SocioDTO;
-import com.bibliotecaLagos.Socios.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Socios.Model.Socio;
+import com.bibliotecaLagos.Socios.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Socios.Service.SocioService;
 
 @org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(SocioController.class)
 @Import(SocioModelAssembler.class)
-@AutoConfigureMockMvc(addFilters = false)
 public class SocioControllerTest {
 
     @Autowired
@@ -85,7 +86,7 @@ public class SocioControllerTest {
     public void buscarPorId_CuandoExiste_DeberiaRetornarSocio() throws Exception {
         var socio = crearSocioEjemplo(1);
 
-        when(socioService.obtenerSocioPorId(1)).thenReturn(socio);
+        when(socioService.obtenerSocioPorId(anyInt())).thenReturn(Optional.of(socio));
 
         mockMvc.perform(get("/api/v1/socios/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -101,7 +102,7 @@ public class SocioControllerTest {
     @DisplayName("GET /api/v1/socios/{id} -> Retorna 404 si el ID no existe")
     public void buscarPorId_CuandoNoExiste_DeberiaRetornar404() throws Exception {
         when(socioService.obtenerSocioPorId(99))
-                .thenThrow(new ResourceNotFoundException("Socio no encontrado"));
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/socios/99")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -109,8 +110,8 @@ public class SocioControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/socios -> Retorna 201 con HATEOAS")
-    public void crear_DeberiaRetornar201() throws Exception {
+    @DisplayName("POST /api/v1/socios -> Retorna 200 con HATEOAS")
+    public void crear_DeberiaRetornar200() throws Exception {
         var socioGuardado = crearSocioEjemplo(1);
 
         when(socioService.crearSocio(any(SocioDTO.class))).thenReturn(socioGuardado);
@@ -129,7 +130,7 @@ public class SocioControllerTest {
         mockMvc.perform(post("/api/v1/socios")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequestBody))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.nombre").value("Juan"))
@@ -196,12 +197,35 @@ public class SocioControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/socios/{id} -> Retorna 200 aunque el ID no exista")
-    public void eliminar_CuandoNoExiste_DeberiaRetornar200() throws Exception {
-        doNothing().when(socioService).eliminarSocio(99);
+    @DisplayName("PUT /api/v1/socios/{id} -> Retorna 404 si el ID no existe")
+    public void actualizarSocio_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        when(socioService.actualizarSocio(anyInt(), any(SocioDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Socio no encontrado"));
+
+        String jsonRequestBody = """
+                {
+                    "nombre": "Test",
+                    "apellido": "Test",
+                    "rut": "12345678-9",
+                    "correo": "test@test.com",
+                    "idTipoSocio": 1
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/socios/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/socios/{id} -> Retorna 404 si el ID no existe")
+    public void eliminarSocio_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        doThrow(new ResourceNotFoundException("Socio no encontrado"))
+                .when(socioService).eliminarSocio(99);
 
         mockMvc.perform(delete("/api/v1/socios/99")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
     }
 }

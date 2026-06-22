@@ -1,3 +1,4 @@
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Assemblers\ReservaModelAssembler.java
 C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Config\WebClientConfig.java
 C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Controller\ReservaController.java
 C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\DTO\LibroDTO.java
@@ -9,4 +10,10 @@ C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\ja
 C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Model\Reserva.java
 C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Repository\ReservaRepository.java
 C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\ReservaApplication.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Security\AuthController.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Security\AuthService.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Security\JwtAuthorizationFilter.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Security\LoginJWTDTO.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Security\ResponseDTO.java
+C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Security\SecurityConfig.java
 C:\Users\vayal\OneDrive\Documentos\GitHub\Biblioteca_Lagos_\Reservas\src\main\java\com\bibliotecaLagos\Reserva\Service\ReservaService.java

@@ -4,6 +4,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,11 +64,15 @@ public class PrestamoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Prestamo>> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         log.info("GET /api/v1/prestamos/{} - buscar prestamo por ID", id);
-        Prestamo prestamo = prestamoService.obtenerPrestamoPorId(id);
-        log.info("Prestamo encontrado: ID={}", prestamo.getId());
-        return ResponseEntity.ok(prestamoModelAssembler.toModel(prestamo));
+        Optional<Prestamo> prestamoOpt = prestamoService.obtenerPrestamoPorId(id);
+        if (prestamoOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el prestamo con ID: " + id);
+        }
+        EntityModel<Prestamo> model = prestamoModelAssembler.toModel(prestamoOpt.get());
+        return ResponseEntity.ok(model);
     }
 
     @PostMapping
@@ -75,8 +81,16 @@ public class PrestamoController {
         Prestamo prestamo = prestamoService.crearPrestamo(dto);
         log.info("Prestamo creado exitosamente: ID={}", prestamo.getId());
         return ResponseEntity
-                .status(HttpStatus.CREATED)
+                .ok()
                 .body(prestamoModelAssembler.toModel(prestamo));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EntityModel<Prestamo>> actualizar(@PathVariable Integer id, @Valid @RequestBody PrestamoDTO dto) {
+        log.info("PUT /api/v1/prestamos/{} - actualizar prestamo", id);
+        Prestamo prestamo = prestamoService.actualizarPrestamo(id, dto);
+        log.info("Prestamo ID={} actualizado exitosamente", id);
+        return ResponseEntity.ok(prestamoModelAssembler.toModel(prestamo));
     }
 
     @DeleteMapping("/{id}")

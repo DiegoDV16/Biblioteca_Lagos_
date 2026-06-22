@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.Usuarios.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +41,14 @@ public class UsuarioService {
         return usuarios;
     }
 
-    public Usuario buscarPorId(Integer id) {
+    public Optional<Usuario> buscarPorId(Integer id) {
         log.info("Buscando usuario por ID: {}", id);
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Usuario con ID {} no encontrado", id);
-                    return new ResourceNotFoundException("Usuario no encontrado");
-                });
-        log.info("Usuario encontrado: ID={}, usuario={}", usuario.getId(), usuario.getUsuario());
+        Optional<Usuario> usuario = usuarioRepository.findById(id);
+        if (usuario.isPresent()) {
+            log.info("Usuario encontrado: ID={}, usuario={}", usuario.get().getId(), usuario.get().getUsuario());
+        } else {
+            log.warn("Usuario con ID {} no encontrado", id);
+        }
         return usuario;
     }
 
@@ -82,7 +83,7 @@ public class UsuarioService {
 
     public Usuario actualizarUsuario(Integer id, UsuarioDTO dto) {
         log.info("Iniciando actualizacion de usuario ID={}", id);
-        Usuario usuarioExistente = buscarPorId(id);
+        Usuario usuarioExistente = buscarPorId(id).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         if (!usuarioExistente.getUsuario().equals(dto.getUsuario()) &&
                 usuarioRepository.findByUsuario(dto.getUsuario()).isPresent()) {
@@ -112,7 +113,7 @@ public class UsuarioService {
 
     public void eliminarUsuario(Integer id) {
         log.info("Iniciando eliminacion de usuario ID={}", id);
-        Usuario usuario = buscarPorId(id);
+        Usuario usuario = buscarPorId(id).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
         usuarioRepository.delete(usuario);
         log.info("Usuario ID={} eliminado exitosamente", id);
     }

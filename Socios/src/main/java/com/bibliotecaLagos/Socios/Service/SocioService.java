@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.Socios.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +41,14 @@ public class SocioService {
         return socios;
     }
 
-    public Socio obtenerSocioPorId(Integer id) {
+    public Optional<Socio> obtenerSocioPorId(Integer id) {
         log.info("Buscando socio por ID: {}", id);
-        Socio socio = socioRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Socio con ID {} no encontrado", id);
-                    return new ResourceNotFoundException("Socio no encontrado");
-                });
-        log.info("Socio encontrado: ID={}, nombre={}", socio.getId(), socio.getNombre());
+        Optional<Socio> socio = socioRepository.findById(id);
+        if (socio.isPresent()) {
+            log.info("Socio encontrado: ID={}, nombre={}", socio.get().getId(), socio.get().getNombre());
+        } else {
+            log.warn("Socio con ID {} no encontrado", id);
+        }
         return socio;
     }
 
@@ -90,7 +91,7 @@ public class SocioService {
 
     public Socio actualizarSocio(Integer id, SocioDTO dto) {
         log.info("Iniciando actualizacion de socio ID={}", id);
-        Socio socioExistente = obtenerSocioPorId(id);
+        Socio socioExistente = obtenerSocioPorId(id).orElseThrow(() -> new ResourceNotFoundException("Socio no encontrado"));
 
         if (!socioExistente.getRut().equals(dto.getRut()) &&
                 socioRepository.findByRut(dto.getRut()).isPresent()) {
@@ -131,7 +132,7 @@ public class SocioService {
 
     public void eliminarSocio(Integer id) {
         log.info("Iniciando eliminacion de socio ID={}", id);
-        Socio socio = obtenerSocioPorId(id);
+        Socio socio = obtenerSocioPorId(id).orElseThrow(() -> new ResourceNotFoundException("Socio no encontrado"));
         socioRepository.delete(socio);
         log.info("Socio ID={} eliminado exitosamente", id);
     }

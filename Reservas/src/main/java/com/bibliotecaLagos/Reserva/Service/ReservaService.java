@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.Reserva.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +45,15 @@ public class ReservaService {
         return reservas;
     }
 
-    public Reserva obtenerReservaPorId(Integer id) {
+    public Optional<Reserva> obtenerReservaPorId(Integer id) {
         log.info("Buscando reserva por ID: {}", id);
-        return reservaRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Reserva con ID {} no encontrada", id);
-                    return new ResourceNotFoundException("Reserva no encontrada");
-                });
+        Optional<Reserva> reserva = reservaRepository.findById(id);
+        if (reserva.isPresent()) {
+            log.info("Reserva encontrada: ID={}", reserva.get().getId());
+        } else {
+            log.warn("Reserva con ID {} no encontrada", id);
+        }
+        return reserva;
     }
 
     public Reserva crearReserva(ReservaDTO dto) {
@@ -95,9 +98,22 @@ public class ReservaService {
         return guardada;
     }
 
+    public Reserva actualizarReserva(Integer id, ReservaDTO dto) {
+        log.info("Iniciando actualizacion de reserva ID={}", id);
+        Reserva reserva = obtenerReservaPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
+        reserva.setSocioId(dto.getSocioId());
+        reserva.setLibroId(dto.getLibroId());
+        reserva.setFechaReserva(dto.getFechaReserva());
+        reserva.setEstado(dto.getEstado());
+        Reserva actualizada = reservaRepository.save(reserva);
+        log.info("Reserva ID={} actualizada exitosamente", id);
+        return actualizada;
+    }
+
     public void eliminarReserva(Integer id) {
         log.info("Iniciando eliminacion de reserva ID={}", id);
-        Reserva reserva = obtenerReservaPorId(id);
+        Reserva reserva = obtenerReservaPorId(id).orElseThrow(() -> new ResourceNotFoundException("Reserva no encontrada"));
         reservaRepository.delete(reserva);
         log.info("Reserva ID={} eliminada exitosamente", id);
     }

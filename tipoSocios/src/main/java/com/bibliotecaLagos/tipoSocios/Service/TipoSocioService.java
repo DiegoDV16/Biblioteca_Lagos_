@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.tipoSocios.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +32,14 @@ public class TipoSocioService {
         return tipos;
     }
 
-    public TipoSocio obtenerTipoSocioPorId(Integer id) {
+    public Optional<TipoSocio> obtenerTipoSocioPorId(Integer id) {
         log.info("Buscando tipo de socio por ID: {}", id);
-        TipoSocio tipoSocio = tipoSocioRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Tipo de socio con ID {} no encontrado", id);
-                    return new ResourceNotFoundException("Tipo de socio no encontrado");
-                });
-        log.info("Tipo de socio encontrado: ID={}, tipoSocio={}", tipoSocio.getId(), tipoSocio.getTipoSocio());
+        Optional<TipoSocio> tipoSocio = tipoSocioRepository.findById(id);
+        if (tipoSocio.isPresent()) {
+            log.info("Tipo de socio encontrado: ID={}, tipoSocio={}", tipoSocio.get().getId(), tipoSocio.get().getTipoSocio());
+        } else {
+            log.warn("Tipo de socio con ID {} no encontrado", id);
+        }
         return tipoSocio;
     }
 
@@ -61,7 +62,7 @@ public class TipoSocioService {
     public TipoSocio actualizarTipoSocio(Integer id, TipoSocioDTO dto) {
         log.info("Iniciando actualizacion de tipo de socio ID={}", id);
 
-        TipoSocio tipoSocio = obtenerTipoSocioPorId(id);
+        TipoSocio tipoSocio = obtenerTipoSocioPorId(id).orElseThrow(() -> new ResourceNotFoundException("Tipo de socio no encontrado"));
         tipoSocio.setTipoSocio(dto.getTipoSocio());
 
         TipoSocio actualizado = tipoSocioRepository.save(tipoSocio);
@@ -72,7 +73,7 @@ public class TipoSocioService {
     public void eliminarTipoSocio(Integer id) {
         log.info("Iniciando eliminacion de tipo de socio ID={}", id);
 
-        TipoSocio tipoSocio = obtenerTipoSocioPorId(id);
+        TipoSocio tipoSocio = obtenerTipoSocioPorId(id).orElseThrow(() -> new ResourceNotFoundException("Tipo de socio no encontrado"));
         tipoSocioRepository.delete(tipoSocio);
 
         log.info("Tipo de socio ID={} eliminado exitosamente", id);

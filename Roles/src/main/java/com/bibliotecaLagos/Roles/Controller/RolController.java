@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.Roles.Controller;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -54,13 +55,17 @@ public class RolController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Rol>> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         log.info("GET /api/v1/roles/{} - Inicio de busqueda por ID", id);
 
-        Rol rol = rolService.buscarPorId(id);
-        EntityModel<Rol> model = rolModelAssembler.toModel(rol);
+        Optional<Rol> rol = rolService.buscarPorId(id);
+        if (rol.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el rol con ID: " + id);
+        }
+        EntityModel<Rol> model = rolModelAssembler.toModel(rol.get());
 
-        log.info("GET /api/v1/roles/{} - Rol encontrado: nombre={}, respuesta 200", id, rol.getNombre());
+        log.info("GET /api/v1/roles/{} - Rol encontrado: nombre={}, respuesta 200", id, rol.get().getNombre());
         return ResponseEntity.ok(model);
     }
 
@@ -71,9 +76,9 @@ public class RolController {
         Rol rolNuevo = rolService.crearRol(dto);
         EntityModel<Rol> model = rolModelAssembler.toModel(rolNuevo);
 
-        log.info("POST /api/v1/roles - Rol creado: ID={}, nombre={}, respuesta 201",
+        log.info("POST /api/v1/roles - Rol creado: ID={}, nombre={}, respuesta 200",
                 rolNuevo.getId(), rolNuevo.getNombre());
-        return ResponseEntity.status(HttpStatus.CREATED).body(model);
+        return ResponseEntity.ok().body(model);
     }
 
     @PutMapping("/{id}")

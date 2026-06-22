@@ -1,22 +1,25 @@
 package com.bibliotecaLagos.Reserva.Controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -24,13 +27,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.bibliotecaLagos.Reserva.Assemblers.ReservaModelAssembler;
 import com.bibliotecaLagos.Reserva.DTO.ReservaDTO;
-import com.bibliotecaLagos.Reserva.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Reserva.Model.Reserva;
+import com.bibliotecaLagos.Reserva.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Reserva.Service.ReservaService;
 
 @org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(ReservaController.class)
 @Import(ReservaModelAssembler.class)
-@AutoConfigureMockMvc(addFilters = false)
 public class ReservaControllerTest {
 
     @Autowired
@@ -80,7 +82,7 @@ public class ReservaControllerTest {
     public void buscarPorId_CuandoExiste_DeberiaRetornarReserva() throws Exception {
         var reserva = crearReservaEjemplo(1);
 
-        when(reservaService.obtenerReservaPorId(1)).thenReturn(reserva);
+        when(reservaService.obtenerReservaPorId(anyInt())).thenReturn(Optional.of(reserva));
 
         mockMvc.perform(get("/api/v1/reservas/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -94,8 +96,7 @@ public class ReservaControllerTest {
     @Test
     @DisplayName("GET /api/v1/reservas/{id} -> Retorna 404 si el ID no existe")
     public void buscarPorId_CuandoNoExiste_DeberiaRetornar404() throws Exception {
-        when(reservaService.obtenerReservaPorId(99))
-                .thenThrow(new ResourceNotFoundException("Reserva no encontrada"));
+        when(reservaService.obtenerReservaPorId(99)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/reservas/99")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -121,7 +122,7 @@ public class ReservaControllerTest {
         mockMvc.perform(post("/api/v1/reservas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequestBody))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$._links.self.href").exists());
@@ -145,6 +146,55 @@ public class ReservaControllerTest {
     }
 
     @Test
+    @DisplayName("PUT /api/v1/reservas/{id} -> Retorna 200 con HATEOAS")
+    public void actualizar_DeberiaRetornar200() throws Exception {
+        var reservaActualizada = crearReservaEjemplo(1);
+        reservaActualizada.setEstado("Completada");
+
+        when(reservaService.actualizarReserva(anyInt(), any(ReservaDTO.class)))
+                .thenReturn(reservaActualizada);
+
+        String jsonRequestBody = """
+                {
+                    "socioId": 1,
+                    "libroId": 1,
+                    "fechaReserva": "2026-06-21",
+                    "estado": "Completada"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/reservas/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.estado").value("Completada"))
+                .andExpect(jsonPath("$._links.self.href").exists());
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/reservas/{id} -> Retorna 404 si el ID no existe")
+    public void actualizar_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        when(reservaService.actualizarReserva(anyInt(), any(ReservaDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Reserva no encontrada"));
+
+        String jsonRequestBody = """
+                {
+                    "socioId": 1,
+                    "libroId": 1,
+                    "fechaReserva": "2026-06-21",
+                    "estado": "Completada"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/reservas/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("DELETE /api/v1/reservas/{id} -> Retorna 200 y mensaje de exito")
     public void eliminar_DeberiaRetornar200() throws Exception {
         doNothing().when(reservaService).eliminarReserva(1);
@@ -156,12 +206,13 @@ public class ReservaControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/reservas/{id} -> Retorna 200 aunque el ID no exista")
-    public void eliminar_CuandoNoExiste_DeberiaRetornar200() throws Exception {
-        doNothing().when(reservaService).eliminarReserva(99);
+    @DisplayName("DELETE /api/v1/reservas/{id} -> Retorna 404 si el ID no existe")
+    public void eliminarReserva_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        doThrow(new ResourceNotFoundException("Reserva no encontrado"))
+                .when(reservaService).eliminarReserva(99);
 
         mockMvc.perform(delete("/api/v1/reservas/99")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
     }
 }

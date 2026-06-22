@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.tipoSocios.Controller;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -54,13 +55,18 @@ public class TipoSocioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<TipoSocio>> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         log.info("GET /api/v1/tipos-socio/{} - Inicio de busqueda por ID", id);
 
-        TipoSocio tipo = tipoSocioService.obtenerTipoSocioPorId(id);
-        EntityModel<TipoSocio> model = tipoSocioModelAssembler.toModel(tipo);
+        Optional<TipoSocio> tipo = tipoSocioService.obtenerTipoSocioPorId(id);
+        if (tipo.isEmpty()) {
+            log.warn("GET /api/v1/tipos-socio/{} - Tipo de socio no encontrado", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el tipo de socio con ID: " + id);
+        }
+        EntityModel<TipoSocio> model = tipoSocioModelAssembler.toModel(tipo.get());
 
-        log.info("GET /api/v1/tipos-socio/{} - Tipo de socio encontrado: tipoSocio={}, respuesta 200", id, tipo.getTipoSocio());
+        log.info("GET /api/v1/tipos-socio/{} - Tipo de socio encontrado: tipoSocio={}, respuesta 200", id, tipo.get().getTipoSocio());
         return ResponseEntity.ok(model);
     }
 
@@ -71,9 +77,9 @@ public class TipoSocioController {
         TipoSocio tipoNuevo = tipoSocioService.crearTipoSocio(dto);
         EntityModel<TipoSocio> model = tipoSocioModelAssembler.toModel(tipoNuevo);
 
-        log.info("POST /api/v1/tipos-socio - Tipo de socio creado: ID={}, tipoSocio={}, respuesta 201",
+        log.info("POST /api/v1/tipos-socio - Tipo de socio creado: ID={}, tipoSocio={}, respuesta 200",
                 tipoNuevo.getId(), tipoNuevo.getTipoSocio());
-        return ResponseEntity.status(HttpStatus.CREATED).body(model);
+        return ResponseEntity.ok().body(model);
     }
 
     @PutMapping("/{id}")

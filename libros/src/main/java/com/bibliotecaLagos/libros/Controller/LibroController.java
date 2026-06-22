@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.libros.Controller;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -54,13 +55,18 @@ public class LibroController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Libro>> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         log.info("GET /api/v1/libros/{} - Inicio de busqueda por ID", id);
 
-        Libro libro = libroService.buscarPorId(id);
-        EntityModel<Libro> model = libroModelAssembler.toModel(libro);
+        Optional<Libro> libro = libroService.buscarPorId(id);
+        if (libro.isEmpty()) {
+            log.warn("GET /api/v1/libros/{} - Libro no encontrado", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el libro con ID: " + id);
+        }
+        EntityModel<Libro> model = libroModelAssembler.toModel(libro.get());
 
-        log.info("GET /api/v1/libros/{} - Libro encontrado: ISBN={}, respuesta 200", id, libro.getIsbn());
+        log.info("GET /api/v1/libros/{} - Libro encontrado: ISBN={}, respuesta 200", id, libro.get().getIsbn());
         return ResponseEntity.ok(model);
     }
 
@@ -82,9 +88,9 @@ public class LibroController {
         Libro libroNuevo = libroService.crearLibro(dto);
         EntityModel<Libro> model = libroModelAssembler.toModel(libroNuevo);
 
-        log.info("POST /api/v1/libros - Libro creado: ID={}, ISBN={}, respuesta 201",
+        log.info("POST /api/v1/libros - Libro creado: ID={}, ISBN={}, respuesta 200",
                 libroNuevo.getId(), libroNuevo.getIsbn());
-        return ResponseEntity.status(HttpStatus.CREATED).body(model);
+        return ResponseEntity.ok().body(model);
     }
 
     @PutMapping("/{id}")

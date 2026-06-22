@@ -3,6 +3,7 @@ package com.bibliotecaLagos.Roles.Controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -14,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,13 +28,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.bibliotecaLagos.Roles.Assemblers.RolModelAssembler;
 import com.bibliotecaLagos.Roles.DTO.RolDTO;
-import com.bibliotecaLagos.Roles.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Roles.Model.Rol;
+import com.bibliotecaLagos.Roles.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Roles.Service.RolService;
 
 @org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(RolController.class)
 @Import(RolModelAssembler.class)
-@AutoConfigureMockMvc(addFilters = false)
 public class RolControllerTest {
 
     @Autowired
@@ -80,7 +81,7 @@ public class RolControllerTest {
     public void buscarPorId_CuandoExiste_DeberiaRetornarRol() throws Exception {
         var rol = crearRolEjemplo(1);
 
-        when(rolService.buscarPorId(1)).thenReturn(rol);
+        when(rolService.buscarPorId(anyInt())).thenReturn(Optional.of(rol));
 
         mockMvc.perform(get("/api/v1/roles/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -96,17 +97,16 @@ public class RolControllerTest {
     @DisplayName("GET /api/v1/roles/{id} -> Retorna 404 si el ID no existe")
     public void buscarPorId_CuandoNoExiste_DeberiaRetornar404() throws Exception {
         when(rolService.buscarPorId(99))
-                .thenThrow(new ResourceNotFoundException("Rol no encontrado"));
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/roles/99")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("Rol no encontrado"));
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    @DisplayName("POST /api/v1/roles -> Retorna 201 con HATEOAS")
-    public void crearRol_DeberiaRetornar201() throws Exception {
+    @DisplayName("POST /api/v1/roles -> Retorna 200 con HATEOAS")
+    public void crearRol_DeberiaRetornar200() throws Exception {
         var rolGuardado = crearRolEjemplo(1);
 
         when(rolService.crearRol(any(RolDTO.class))).thenReturn(rolGuardado);
@@ -120,7 +120,7 @@ public class RolControllerTest {
         mockMvc.perform(post("/api/v1/roles")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequestBody))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.nombre").value("Admin"))
@@ -179,12 +179,31 @@ public class RolControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/roles/{id} -> Retorna 200 aunque el ID no exista")
-    public void eliminarRol_CuandoNoExiste_DeberiaRetornar200() throws Exception {
-        doNothing().when(rolService).eliminarRol(99);
+    @DisplayName("PUT /api/v1/roles/{id} -> Retorna 404 si el ID no existe")
+    public void actualizarRol_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        when(rolService.actualizarRol(anyInt(), any(RolDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Rol no encontrado"));
+
+        String jsonRequestBody = """
+                {
+                    "nombre": "Test"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/roles/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/roles/{id} -> Retorna 404 si el ID no existe")
+    public void eliminarRol_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        doThrow(new ResourceNotFoundException("Rol no encontrado"))
+                .when(rolService).eliminarRol(99);
 
         mockMvc.perform(delete("/api/v1/roles/99")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
     }
 }

@@ -3,6 +3,7 @@ package com.bibliotecaLagos.Categorias.Controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -14,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,7 +34,6 @@ import com.bibliotecaLagos.Categorias.Service.CategoriaService;
 
 @org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(CategoriaController.class)
 @Import(CategoriaModelAssembler.class)
-@AutoConfigureMockMvc(addFilters = false)
 public class CategoriaControllerTest {
 
     @Autowired
@@ -79,7 +80,7 @@ public class CategoriaControllerTest {
         categoria.setNombre("Fantasia");
         categoria.setDescripcion("Libros de fantasia");
 
-        when(categoriaService.buscarPorId(1)).thenReturn(categoria);
+        when(categoriaService.buscarPorId(anyInt())).thenReturn(Optional.of(categoria));
 
         mockMvc.perform(get("/api/v1/categorias/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -96,12 +97,12 @@ public class CategoriaControllerTest {
     @DisplayName("GET /api/v1/categorias/{id} -> Retorna 404 si el ID no existe")
     public void buscarPorId_CuandoNoExiste_DeberiaRetornar404() throws Exception {
         when(categoriaService.buscarPorId(99))
-                .thenThrow(new ResourceNotFoundException("Categoria no encontrada"));
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/categorias/99")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Categoria no encontrada"));
+                .andExpect(content().string("No existe la categoria con ID: 99"));
     }
 
     @Test
@@ -124,7 +125,7 @@ public class CategoriaControllerTest {
         mockMvc.perform(post("/api/v1/categorias")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequestBody))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.nombre").value("Fantasia"))
@@ -178,6 +179,24 @@ public class CategoriaControllerTest {
     }
 
     @Test
+    @DisplayName("PUT /api/v1/categorias/{id} -> Retorna 404 si el ID no existe")
+    public void actualizarCategoria_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        when(categoriaService.actualizarCategoria(anyInt(), any(CategoriaDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Categoria no encontrada"));
+
+        String jsonRequestBody = """
+                {
+                    "nombre": "Test"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/categorias/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("DELETE /api/v1/categorias/{id} -> Retorna 200 y mensaje de exito")
     public void eliminarCategoria_DeberiaRetornar200() throws Exception {
         doNothing().when(categoriaService).eliminarCategoria(1);
@@ -189,12 +208,13 @@ public class CategoriaControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/categorias/{id} -> Retorna 200 aunque el ID no exista (no mockeamos excepcion)")
-    public void eliminarCategoria_CuandoNoExiste_DeberiaRetornar200() throws Exception {
-        doNothing().when(categoriaService).eliminarCategoria(99);
+    @DisplayName("DELETE /api/v1/categorias/{id} -> Retorna 404 si el ID no existe")
+    public void eliminarCategoria_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        doThrow(new ResourceNotFoundException("Categoria no encontrada"))
+                .when(categoriaService).eliminarCategoria(99);
 
         mockMvc.perform(delete("/api/v1/categorias/99")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
     }
 }

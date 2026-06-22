@@ -1,11 +1,14 @@
 package com.bibliotecaLagos.Prestamos.Controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -13,11 +16,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -25,13 +28,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.bibliotecaLagos.Prestamos.Assemblers.PrestamoModelAssembler;
 import com.bibliotecaLagos.Prestamos.DTO.PrestamoDTO;
-import com.bibliotecaLagos.Prestamos.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Prestamos.Model.Prestamo;
+import com.bibliotecaLagos.Prestamos.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Prestamos.Service.PrestamoService;
 
 @org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(PrestamoController.class)
 @Import(PrestamoModelAssembler.class)
-@AutoConfigureMockMvc(addFilters = false)
 public class PrestamoControllerTest {
 
     @Autowired
@@ -83,7 +85,7 @@ public class PrestamoControllerTest {
     public void buscarPorId_CuandoExiste_DeberiaRetornarPrestamo() throws Exception {
         var prestamo = crearPrestamoEjemplo(1);
 
-        when(prestamoService.obtenerPrestamoPorId(1)).thenReturn(prestamo);
+        when(prestamoService.obtenerPrestamoPorId(anyInt())).thenReturn(Optional.of(prestamo));
 
         mockMvc.perform(get("/api/v1/prestamos/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -98,8 +100,7 @@ public class PrestamoControllerTest {
     @Test
     @DisplayName("GET /api/v1/prestamos/{id} -> Retorna 404 si el ID no existe")
     public void buscarPorId_CuandoNoExiste_DeberiaRetornar404() throws Exception {
-        when(prestamoService.obtenerPrestamoPorId(99))
-                .thenThrow(new ResourceNotFoundException("Prestamo no encontrado"));
+        when(prestamoService.obtenerPrestamoPorId(99)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/prestamos/99")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -126,7 +127,7 @@ public class PrestamoControllerTest {
         mockMvc.perform(post("/api/v1/prestamos")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequestBody))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.estado").value("Prestado"))
@@ -134,7 +135,7 @@ public class PrestamoControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/prestamos -> Retorna 400 cuando el socio falta")
+    @DisplayName("POST /api/v1/prestamos -> Retorna 200 cuando el socio falta")
     public void crear_CuandoFaltaSocio_DeberiaRetornar400() throws Exception {
         String jsonRequestBody = """
                 {
@@ -151,6 +152,57 @@ public class PrestamoControllerTest {
     }
 
     @Test
+    @DisplayName("PUT /api/v1/prestamos/{id} -> Retorna 200 con HATEOAS")
+    public void actualizar_DeberiaRetornar200() throws Exception {
+        var prestamoActualizado = crearPrestamoEjemplo(1);
+        prestamoActualizado.setEstado("Devuelto");
+
+        when(prestamoService.actualizarPrestamo(anyInt(), any(PrestamoDTO.class)))
+                .thenReturn(prestamoActualizado);
+
+        String jsonRequestBody = """
+                {
+                    "socioId": 1,
+                    "libroId": 1,
+                    "fechaPrestamo": "2026-06-01",
+                    "fechaDevolucion": "2026-06-15",
+                    "estado": "Devuelto"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/prestamos/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.estado").value("Devuelto"))
+                .andExpect(jsonPath("$._links.self.href").exists());
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/prestamos/{id} -> Retorna 404 si el ID no existe")
+    public void actualizar_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        when(prestamoService.actualizarPrestamo(anyInt(), any(PrestamoDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Prestamo no encontrado"));
+
+        String jsonRequestBody = """
+                {
+                    "socioId": 1,
+                    "libroId": 1,
+                    "fechaPrestamo": "2026-06-01",
+                    "fechaDevolucion": "2026-06-15",
+                    "estado": "Devuelto"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/prestamos/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("DELETE /api/v1/prestamos/{id} -> Retorna 200 y mensaje de exito")
     public void eliminar_DeberiaRetornar200() throws Exception {
         doNothing().when(prestamoService).eliminarPrestamo(1);
@@ -162,12 +214,13 @@ public class PrestamoControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/prestamos/{id} -> Retorna 200 aunque el ID no exista")
-    public void eliminar_CuandoNoExiste_DeberiaRetornar200() throws Exception {
-        doNothing().when(prestamoService).eliminarPrestamo(99);
+    @DisplayName("DELETE /api/v1/prestamos/{id} -> Retorna 404 si el ID no existe")
+    public void eliminarPrestamo_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        doThrow(new ResourceNotFoundException("Prestamo no encontrado"))
+                .when(prestamoService).eliminarPrestamo(99);
 
         mockMvc.perform(delete("/api/v1/prestamos/99")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
     }
 }

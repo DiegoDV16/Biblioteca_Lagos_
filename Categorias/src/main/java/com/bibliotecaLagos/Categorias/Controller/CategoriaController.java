@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.Categorias.Controller;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -54,13 +55,18 @@ public class CategoriaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Categoria>> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         log.info("GET /api/v1/categorias/{} - Inicio de busqueda por ID", id);
 
-        Categoria categoria = categoriaService.buscarPorId(id);
-        EntityModel<Categoria> model = categoriaModelAssembler.toModel(categoria);
+        Optional<Categoria> categoria = categoriaService.buscarPorId(id);
+        if (categoria.isEmpty()) {
+            log.warn("GET /api/v1/categorias/{} - Categoria no encontrada", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe la categoria con ID: " + id);
+        }
+        EntityModel<Categoria> model = categoriaModelAssembler.toModel(categoria.get());
 
-        log.info("GET /api/v1/categorias/{} - Categoria encontrada: {}, respuesta 200", id, categoria.getNombre());
+        log.info("GET /api/v1/categorias/{} - Categoria encontrada: {}, respuesta 200", id, categoria.get().getNombre());
         return ResponseEntity.ok(model);
     }
 
@@ -72,9 +78,9 @@ public class CategoriaController {
         Categoria categoriaNueva = categoriaService.crearCategoria(dto);
         EntityModel<Categoria> model = categoriaModelAssembler.toModel(categoriaNueva);
 
-        log.info("POST /api/v1/categorias - Categoria creada: ID={}, nombre={}, respuesta 201",
+        log.info("POST /api/v1/categorias - Categoria creada: ID={}, nombre={}, respuesta 200",
                 categoriaNueva.getId(), categoriaNueva.getNombre());
-        return ResponseEntity.status(HttpStatus.CREATED).body(model);
+        return ResponseEntity.ok().body(model);
     }
 
     @PutMapping("/{id}")

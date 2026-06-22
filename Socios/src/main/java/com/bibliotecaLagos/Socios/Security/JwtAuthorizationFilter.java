@@ -10,7 +10,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -46,9 +45,8 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(usuario, null, new ArrayList<>());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
-        } catch (JWTVerificationException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

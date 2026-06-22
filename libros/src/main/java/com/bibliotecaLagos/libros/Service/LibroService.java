@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.libros.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,14 +46,14 @@ public class LibroService {
         return libros;
     }
 
-    public Libro buscarPorId(Integer id) {
+    public Optional<Libro> buscarPorId(Integer id) {
         log.info("Buscando libro por ID: {}", id);
-        Libro libro = libroRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Libro con ID {} no encontrado", id);
-                    return new ResourceNotFoundException("Libro no encontrado");
-                });
-        log.info("Libro encontrado: ID={}, ISBN={}", libro.getId(), libro.getIsbn());
+        Optional<Libro> libro = libroRepository.findById(id);
+        if (libro.isPresent()) {
+            log.info("Libro encontrado: ID={}, ISBN={}", libro.get().getId(), libro.get().getIsbn());
+        } else {
+            log.warn("Libro con ID {} no encontrado", id);
+        }
         return libro;
     }
 

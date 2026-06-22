@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.Prestamos.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,14 +45,14 @@ public class PrestamoService {
         return prestamos;
     }
 
-    public Prestamo obtenerPrestamoPorId(Integer id) {
+    public Optional<Prestamo> obtenerPrestamoPorId(Integer id) {
         log.info("Buscando prestamo por ID: {}", id);
-        Prestamo prestamo = prestamoRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Prestamo con ID {} no encontrado", id);
-                    return new ResourceNotFoundException("Prestamo no encontrado");
-                });
-        log.info("Prestamo encontrado: ID={}", prestamo.getId());
+        Optional<Prestamo> prestamo = prestamoRepository.findById(id);
+        if (prestamo.isPresent()) {
+            log.info("Prestamo encontrado: ID={}", prestamo.get().getId());
+        } else {
+            log.warn("Prestamo con ID {} no encontrado", id);
+        }
         return prestamo;
     }
 
@@ -96,9 +97,24 @@ public class PrestamoService {
         return guardado;
     }
 
+    public Prestamo actualizarPrestamo(Integer id, PrestamoDTO dto) {
+        log.info("Iniciando actualizacion de prestamo ID={}", id);
+        Prestamo prestamo = obtenerPrestamoPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prestamo no encontrado"));
+        prestamo.setSocioId(dto.getSocioId());
+        prestamo.setLibroId(dto.getLibroId());
+        prestamo.setFechaPrestamo(dto.getFechaPrestamo());
+        prestamo.setFechaDevolucion(dto.getFechaDevolucion());
+        prestamo.setFechaEntrega(dto.getFechaEntrega());
+        prestamo.setEstado(dto.getEstado());
+        Prestamo actualizado = prestamoRepository.save(prestamo);
+        log.info("Prestamo ID={} actualizado exitosamente", id);
+        return actualizado;
+    }
+
     public void eliminarPrestamo(Integer id) {
         log.info("Iniciando eliminacion de prestamo ID={}", id);
-        Prestamo prestamo = obtenerPrestamoPorId(id);
+        Prestamo prestamo = obtenerPrestamoPorId(id).orElseThrow(() -> new ResourceNotFoundException("Prestamo no encontrado"));
         prestamoRepository.delete(prestamo);
         log.info("Prestamo ID={} eliminado exitosamente", id);
     }

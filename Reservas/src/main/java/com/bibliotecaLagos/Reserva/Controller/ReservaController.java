@@ -4,6 +4,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,11 +64,15 @@ public class ReservaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Reserva>> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         log.info("GET /api/v1/reservas/{} - buscar reserva por ID", id);
-        Reserva reserva = reservaService.obtenerReservaPorId(id);
-        log.info("Reserva encontrada: ID={}", reserva.getId());
-        return ResponseEntity.ok(reservaModelAssembler.toModel(reserva));
+        Optional<Reserva> reservaOpt = reservaService.obtenerReservaPorId(id);
+        if (reservaOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe la reserva con ID: " + id);
+        }
+        EntityModel<Reserva> model = reservaModelAssembler.toModel(reservaOpt.get());
+        return ResponseEntity.ok(model);
     }
 
     @PostMapping
@@ -75,8 +81,16 @@ public class ReservaController {
         Reserva reserva = reservaService.crearReserva(dto);
         log.info("Reserva creada exitosamente: ID={}", reserva.getId());
         return ResponseEntity
-                .status(HttpStatus.CREATED)
+                .ok()
                 .body(reservaModelAssembler.toModel(reserva));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EntityModel<Reserva>> actualizar(@PathVariable Integer id, @Valid @RequestBody ReservaDTO dto) {
+        log.info("PUT /api/v1/reservas/{} - actualizar reserva", id);
+        Reserva reserva = reservaService.actualizarReserva(id, dto);
+        log.info("Reserva ID={} actualizada exitosamente", id);
+        return ResponseEntity.ok(reservaModelAssembler.toModel(reserva));
     }
 
     @DeleteMapping("/{id}")

@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.Multas.Service;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatusCode;
@@ -32,13 +33,9 @@ public class MultaService {
         return multaRepository.findAll();
     }
 
-    public Multa buscarPorId(Integer id) {
+    public Optional<Multa> buscarPorId(Integer id) {
 
-        return multaRepository.findById(id)
-        .orElseThrow(() ->
-        new ResourceNotFoundException(
-                "Multa no encontrada"
-        ));
+        return multaRepository.findById(id);
     }
 
     public Multa crearMulta(MultaDTO dto) {
@@ -76,7 +73,7 @@ public class MultaService {
 
     public Multa actualizarMulta(Integer id, MultaDTO dto) {
 
-        Multa multa = buscarPorId(id);
+        Multa multa = buscarPorId(id).orElseThrow(() -> new ResourceNotFoundException("Multa no encontrada"));
         multa.setMonto(dto.getMonto());
         multa.setDiasRetraso(dto.getDiasRetraso());
         multa.setPagada(dto.getPagada());
@@ -86,7 +83,7 @@ public class MultaService {
 
     public void eliminarMulta(Integer id) {
 
-        Multa multa = buscarPorId(id);
+        Multa multa = buscarPorId(id).orElseThrow(() -> new ResourceNotFoundException("Multa no encontrada"));
         multaRepository.delete(multa);
     }
 }

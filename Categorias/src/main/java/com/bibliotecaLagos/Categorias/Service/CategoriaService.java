@@ -1,6 +1,7 @@
 package com.bibliotecaLagos.Categorias.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +32,14 @@ public class CategoriaService {
         return categorias;
     }
 
-    public Categoria buscarPorId(Integer id) {
+    public Optional<Categoria> buscarPorId(Integer id) {
         log.info("Buscando categoria por ID: {}", id);
-        Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.warn("Categoria con ID {} no encontrada", id);
-                    return new ResourceNotFoundException("Categoria no encontrada");
-                });
-        log.info("Categoria encontrada: ID={}, nombre={}", categoria.getId(), categoria.getNombre());
+        Optional<Categoria> categoria = categoriaRepository.findById(id);
+        if (categoria.isPresent()) {
+            log.info("Categoria encontrada: ID={}, nombre={}", categoria.get().getId(), categoria.get().getNombre());
+        } else {
+            log.warn("Categoria con ID {} no encontrada", id);
+        }
         return categoria;
     }
 
@@ -60,7 +61,7 @@ public class CategoriaService {
 
     public Categoria actualizarCategoria(Integer id, CategoriaDTO dto) {
         log.info("Iniciando actualizacion de categoria ID={}", id);
-        Categoria categoria = buscarPorId(id);
+        Categoria categoria = buscarPorId(id).orElseThrow(() -> new ResourceNotFoundException("Categoria no encontrada"));
         categoria.setNombre(dto.getNombre());
         categoria.setDescripcion(dto.getDescripcion());
         Categoria actualizada = categoriaRepository.save(categoria);
@@ -70,7 +71,7 @@ public class CategoriaService {
 
     public void eliminarCategoria(Integer id) {
         log.info("Iniciando eliminacion de categoria ID={}", id);
-        Categoria categoria = buscarPorId(id);
+        Categoria categoria = buscarPorId(id).orElseThrow(() -> new ResourceNotFoundException("Categoria no encontrada"));
         categoriaRepository.delete(categoria);
         log.info("Categoria ID={} eliminada exitosamente", id);
     }

@@ -4,6 +4,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -63,11 +64,15 @@ public class SocioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Socio>> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         log.info("GET /api/v1/socios/{} - buscar socio por ID", id);
-        Socio socio = socioService.obtenerSocioPorId(id);
-        log.info("Socio encontrado: ID={}, nombre={}", socio.getId(), socio.getNombre());
-        return ResponseEntity.ok(socioModelAssembler.toModel(socio));
+        Optional<Socio> socio = socioService.obtenerSocioPorId(id);
+        if (socio.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el socio con ID: " + id);
+        }
+        log.info("Socio encontrado: ID={}, nombre={}", socio.get().getId(), socio.get().getNombre());
+        return ResponseEntity.ok(socioModelAssembler.toModel(socio.get()));
     }
 
     @PostMapping
@@ -75,8 +80,7 @@ public class SocioController {
         log.info("POST /api/v1/socios - crear nuevo socio: rut={}", dto.getRut());
         Socio socio = socioService.crearSocio(dto);
         log.info("Socio creado exitosamente: ID={}", socio.getId());
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
+        return ResponseEntity.ok()
                 .body(socioModelAssembler.toModel(socio));
     }
 

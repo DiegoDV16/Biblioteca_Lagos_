@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -15,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +35,6 @@ import com.bibliotecaLagos.libros.Service.LibroService;
 
 @org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(LibroController.class)
 @Import(LibroModelAssembler.class)
-@AutoConfigureMockMvc(addFilters = false)
 public class LibroControllerTest {
 
     @Autowired
@@ -90,7 +91,7 @@ public class LibroControllerTest {
     public void buscarPorId_CuandoExiste_DeberiaRetornarLibro() throws Exception {
         var libro = crearLibroEjemplo(1);
 
-        when(libroService.buscarPorId(1)).thenReturn(libro);
+        when(libroService.buscarPorId(anyInt())).thenReturn(Optional.of(libro));
 
         mockMvc.perform(get("/api/v1/libros/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -107,11 +108,12 @@ public class LibroControllerTest {
     @DisplayName("GET /api/v1/libros/{id} -> Retorna 404 si el ID no existe")
     public void buscarPorId_CuandoNoExiste_DeberiaRetornar404() throws Exception {
         when(libroService.buscarPorId(99))
-                .thenThrow(new ResourceNotFoundException("Libro no encontrado"));
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/libros/99")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("No existe el libro con ID: 99"));
     }
 
     @Test
@@ -155,7 +157,7 @@ public class LibroControllerTest {
         mockMvc.perform(post("/api/v1/libros")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequestBody))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.titulo").value("Cien Anios de Soledad"))
@@ -222,6 +224,33 @@ public class LibroControllerTest {
     }
 
     @Test
+    @DisplayName("PUT /api/v1/libros/{id} -> Retorna 404 si el ID no existe")
+    public void actualizarLibro_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        when(libroService.actualizarLibro(anyInt(), any(LibroDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Libro no encontrado"));
+
+        String jsonRequestBody = """
+                {
+                    "titulo": "Test",
+                    "autor": "Test",
+                    "isbn": "Test",
+                    "editorial": "Test",
+                    "anioPublicacion": 2020,
+                    "cantidadDisponible": 1,
+                    "cantidadTotal": 1,
+                    "categoriaId": 1,
+                    "proveedorId": 1,
+                    "estado": "Disponible"
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/libros/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("DELETE /api/v1/libros/{id} -> Retorna 200 y mensaje de exito")
     public void eliminarLibro_DeberiaRetornar200() throws Exception {
         doNothing().when(libroService).eliminarLibro(1);
@@ -233,12 +262,13 @@ public class LibroControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/libros/{id} -> Retorna 200 aunque el ID no exista")
-    public void eliminarLibro_CuandoNoExiste_DeberiaRetornar200() throws Exception {
-        doNothing().when(libroService).eliminarLibro(99);
+    @DisplayName("DELETE /api/v1/libros/{id} -> Retorna 404 si el ID no existe")
+    public void eliminarLibro_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        doThrow(new ResourceNotFoundException("Libro no encontrado"))
+                .when(libroService).eliminarLibro(99);
 
         mockMvc.perform(delete("/api/v1/libros/99")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
     }
 }

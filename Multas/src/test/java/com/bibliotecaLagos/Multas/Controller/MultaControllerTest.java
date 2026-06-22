@@ -1,7 +1,9 @@
 package com.bibliotecaLagos.Multas.Controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -13,11 +15,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -25,13 +27,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.bibliotecaLagos.Multas.Assemblers.MultaModelAssembler;
 import com.bibliotecaLagos.Multas.DTO.MultaDTO;
-import com.bibliotecaLagos.Multas.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Multas.Model.Multa;
+import com.bibliotecaLagos.Multas.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Multas.Service.MultaService;
 
 @org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(MultaController.class)
 @Import(MultaModelAssembler.class)
-@AutoConfigureMockMvc(addFilters = false)
 public class MultaControllerTest {
 
     @Autowired
@@ -81,7 +82,7 @@ public class MultaControllerTest {
     public void buscarPorId_CuandoExiste_DeberiaRetornarMulta() throws Exception {
         var multa = crearMultaEjemplo(1);
 
-        when(multaService.buscarPorId(1)).thenReturn(multa);
+        when(multaService.buscarPorId(anyInt())).thenReturn(Optional.of(multa));
 
         mockMvc.perform(get("/api/v1/multas/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -95,8 +96,7 @@ public class MultaControllerTest {
     @Test
     @DisplayName("GET /api/v1/multas/{id} -> Retorna 404 si el ID no existe")
     public void buscarPorId_CuandoNoExiste_DeberiaRetornar404() throws Exception {
-        when(multaService.buscarPorId(99))
-                .thenThrow(new ResourceNotFoundException("Multa no encontrada"));
+        when(multaService.buscarPorId(99)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/multas/99")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -122,7 +122,7 @@ public class MultaControllerTest {
         mockMvc.perform(post("/api/v1/multas")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequestBody))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$._links.self.href").exists());
@@ -179,5 +179,37 @@ public class MultaControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value("Multa eliminada correctamente"));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/multas/{id} -> Retorna 404 si el ID no existe")
+    public void actualizarMulta_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        when(multaService.actualizarMulta(anyInt(), any(MultaDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Multa no encontrado"));
+
+        String jsonRequestBody = """
+                {
+                    "prestamoId": 1,
+                    "monto": 50.00,
+                    "diasRetraso": 5,
+                    "pagada": true
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/multas/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/multas/{id} -> Retorna 404 si el ID no existe")
+    public void eliminarMulta_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        doThrow(new ResourceNotFoundException("Multa no encontrado"))
+                .when(multaService).eliminarMulta(99);
+
+        mockMvc.perform(delete("/api/v1/multas/99")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 }

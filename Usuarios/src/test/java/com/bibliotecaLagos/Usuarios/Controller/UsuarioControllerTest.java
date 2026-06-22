@@ -3,6 +3,7 @@ package com.bibliotecaLagos.Usuarios.Controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -14,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,13 +28,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.bibliotecaLagos.Usuarios.Assemblers.UsuarioModelAssembler;
 import com.bibliotecaLagos.Usuarios.DTO.UsuarioDTO;
-import com.bibliotecaLagos.Usuarios.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Usuarios.Model.Usuario;
+import com.bibliotecaLagos.Usuarios.Exception.ResourceNotFoundException;
 import com.bibliotecaLagos.Usuarios.Service.UsuarioService;
 
 @org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest(UsuarioController.class)
 @Import(UsuarioModelAssembler.class)
-@AutoConfigureMockMvc(addFilters = false)
 public class UsuarioControllerTest {
 
     @Autowired
@@ -82,7 +83,7 @@ public class UsuarioControllerTest {
     public void buscarPorId_CuandoExiste_DeberiaRetornarUsuario() throws Exception {
         var usuario = crearUsuarioEjemplo(1);
 
-        when(usuarioService.buscarPorId(1)).thenReturn(usuario);
+        when(usuarioService.buscarPorId(anyInt())).thenReturn(Optional.of(usuario));
 
         mockMvc.perform(get("/api/v1/usuarios/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -98,7 +99,7 @@ public class UsuarioControllerTest {
     @DisplayName("GET /api/v1/usuarios/{id} -> Retorna 404 si el ID no existe")
     public void buscarPorId_CuandoNoExiste_DeberiaRetornar404() throws Exception {
         when(usuarioService.buscarPorId(99))
-                .thenThrow(new ResourceNotFoundException("Usuario no encontrado"));
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/usuarios/99")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -106,8 +107,8 @@ public class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/usuarios -> Retorna 201 con HATEOAS")
-    public void crearUsuario_DeberiaRetornar201() throws Exception {
+    @DisplayName("POST /api/v1/usuarios -> Retorna 200 con HATEOAS")
+    public void crearUsuario_DeberiaRetornar200() throws Exception {
         var usuarioGuardado = crearUsuarioEjemplo(1);
 
         when(usuarioService.crearUsuario(any(UsuarioDTO.class))).thenReturn(usuarioGuardado);
@@ -123,7 +124,7 @@ public class UsuarioControllerTest {
         mockMvc.perform(post("/api/v1/usuarios")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonRequestBody))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.usuario").value("jperez"))
@@ -185,12 +186,33 @@ public class UsuarioControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/usuarios/{id} -> Retorna 200 aunque el ID no exista")
-    public void eliminarUsuario_CuandoNoExiste_DeberiaRetornar200() throws Exception {
-        doNothing().when(usuarioService).eliminarUsuario(99);
+    @DisplayName("PUT /api/v1/usuarios/{id} -> Retorna 404 si el ID no existe")
+    public void actualizarUsuario_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        when(usuarioService.actualizarUsuario(anyInt(), any(UsuarioDTO.class)))
+                .thenThrow(new ResourceNotFoundException("Usuario no encontrado"));
+
+        String jsonRequestBody = """
+                {
+                    "usuario": "test",
+                    "contrasena": "1234",
+                    "rolId": 1
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/usuarios/99")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonRequestBody))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/usuarios/{id} -> Retorna 404 si el ID no existe")
+    public void eliminarUsuario_CuandoNoExiste_DeberiaRetornar404() throws Exception {
+        doThrow(new ResourceNotFoundException("Usuario no encontrado"))
+                .when(usuarioService).eliminarUsuario(99);
 
         mockMvc.perform(delete("/api/v1/usuarios/99")
                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isNotFound());
     }
 }

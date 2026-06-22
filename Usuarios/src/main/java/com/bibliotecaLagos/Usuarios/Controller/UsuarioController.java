@@ -4,6 +4,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -63,11 +64,15 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<Usuario>> buscarPorId(@PathVariable Integer id) {
+    public ResponseEntity<?> buscarPorId(@PathVariable Integer id) {
         log.info("GET /api/v1/usuarios/{} - buscar usuario por ID", id);
-        Usuario usuario = usuarioService.buscarPorId(id);
-        log.info("Usuario encontrado: ID={}, usuario={}", usuario.getId(), usuario.getUsuario());
-        return ResponseEntity.ok(usuarioModelAssembler.toModel(usuario));
+        Optional<Usuario> usuario = usuarioService.buscarPorId(id);
+        if (usuario.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No existe el usuario con ID: " + id);
+        }
+        log.info("Usuario encontrado: ID={}, usuario={}", usuario.get().getId(), usuario.get().getUsuario());
+        return ResponseEntity.ok(usuarioModelAssembler.toModel(usuario.get()));
     }
 
     @PostMapping
@@ -75,8 +80,7 @@ public class UsuarioController {
         log.info("POST /api/v1/usuarios - crear nuevo usuario: {}", dto.getUsuario());
         Usuario usuarioNuevo = usuarioService.crearUsuario(dto);
         log.info("Usuario creado exitosamente: ID={}", usuarioNuevo.getId());
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
+        return ResponseEntity.ok()
                 .body(usuarioModelAssembler.toModel(usuarioNuevo));
     }
 
