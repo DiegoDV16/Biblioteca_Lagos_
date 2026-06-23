@@ -5,6 +5,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -19,7 +20,7 @@ public class GatewayController {
     @RequestMapping("/**")
     public Mono<ResponseEntity<String>> route(ServerWebExchange exchange) {
         String path = exchange.getRequest().getURI().getRawPath();
-        String method = exchange.getRequest().getMethod().name();
+        HttpMethod method = exchange.getRequest().getMethod();
 
         String targetUrl = resolveTargetUrl(path);
         if (targetUrl == null) {
@@ -27,7 +28,7 @@ public class GatewayController {
         }
 
         return webClientBuilder.build()
-                .method(HttpMethod.valueOf(method))
+                .method(method)
                 .uri(targetUrl)
                 .headers(headers -> {
                     exchange.getRequest().getHeaders().forEach((key, values) -> {
@@ -36,6 +37,7 @@ public class GatewayController {
                         }
                     });
                 })
+                .body(BodyInserters.fromDataBuffers(exchange.getRequest().getBody()))
                 .retrieve()
                 .toEntity(String.class)
                 .onErrorResume(e ->
